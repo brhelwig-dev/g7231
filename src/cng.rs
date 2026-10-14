@@ -13,9 +13,8 @@ use crate::{EXC_MEMORY, FRAME_LEN, LPC_ORDER, SUBFRAME_LEN, clip, dot};
 
 /// Seed of the comfort noise generator at the start of every inactive period.
 pub(crate) const SEED: u16 = 12345;
-/// Number of values the random lag of the second half frame is drawn from. The 5.2 release
-/// of the reference draws from 19; the conformance vectors were generated with 21.
-const SECOND_LAG_CHOICES: u32 = 21;
+/// Number of values the random lag of the second half frame is drawn from (123 to 141).
+const SECOND_LAG_CHOICES: u32 = 19;
 const LAG_OFFSETS: [usize; 4] = [1, 0, 1, 3];
 const BLOCK_LEN: usize = 2 * SUBFRAME_LEN;
 const BLOCK_PULSES: usize = 11;
@@ -224,7 +223,7 @@ mod tests {
         let mut memory = [0.0; EXC_MEMORY];
         let mut random = Random::new(SEED);
         let noise = excitation(100.0, &mut memory, &mut random);
-        assert_eq!(noise.pitch.map(|p| p.pair_lag), [129, 129, 137, 137]);
+        assert_eq!(noise.pitch.map(|p| p.pair_lag), [129, 129, 135, 135]);
         assert_eq!(noise.pitch.map(|p| p.gain_index), [34, 31, 18, 35]);
     }
 
