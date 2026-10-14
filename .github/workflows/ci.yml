@@ -37,6 +37,6 @@ jobs:
           fi
           echo "$ITU_PACKAGE_SHA256  itu/g7231.zip" | sha256sum -c -
           unzip -q -o itu/g7231.zip 'Software/*' -x '*.C' '*.H' '*.c' '*.h' '*.MAK' -d itu
-      - run: cargo test --release -- --ignored
+      - run: cargo test --release -- --ignored --nocapture
         env:
           G7231_VECTORS: ${{ github.workspace }}/itu/Software
