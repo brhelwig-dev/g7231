@@ -145,7 +145,11 @@ mod tests {
         let coded = encoder.encode(&[1; 20], 8000).unwrap();
         let mut soft = [0i8; RECORD_LEN];
         for (i, s) in soft.iter_mut().enumerate().take(8 * coded.len()) {
-            *s = if (coded[i / 8] >> (i % 8)) & 1 == 1 { -127 } else { 127 };
+            *s = if (coded[i / 8] >> (i % 8)) & 1 == 1 {
+                -127
+            } else {
+                127
+            };
         }
         let received = ChannelDecoder::new([[100, 100]; 3]).decode(&soft);
         assert!(received.bfi);
