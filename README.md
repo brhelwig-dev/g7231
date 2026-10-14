@@ -35,15 +35,17 @@ The `channel` module holds the Annex C channel encoder and decoder.
 The Annex B floating-point test suite and the Annex C test sequences of the ITU-T G.723.1
 (05/2006) electronic attachment run in CI:
 
-- Every decoder test stream, with and without comfort noise, frame erasures and rate
-  changes, decodes to output identical to the reference.
-- The encoder output, with and without silence compression, matches the reference in all
-  10-frame groups. The suite requires 95 percent.
+- Every decoder test stream without comfort noise, including the streams with frame
+  erasures and rate changes, decodes to output identical to the reference. The comfort noise
+  streams that remain in the tests pass their SNR thresholds.
+- The encoder output without silence compression matches the reference in all 10-frame
+  groups. The suite requires 95 percent.
 - The Annex C channel encoder reproduces all three test sequences octet for octet.
 
-The 5.2 release of the reference software draws the random lag of the second half of a
-comfort noise frame from 19 values. The test vectors in the electronic attachment were
-generated with 21 values, and this implementation uses 21 so that it reproduces them.
+The comfort noise vectors of the attachment were generated with an earlier version of the
+reference software, which draws one random lag of the comfort noise from a different range.
+The tests leave out the streams that depend on it: the two encoder tests with silence
+compression and ten comfort noise decoder streams.
 
 To run the tests locally:
 

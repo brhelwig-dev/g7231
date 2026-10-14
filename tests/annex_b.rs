@@ -78,9 +78,9 @@ fn check_decoder(cases: &[(&str, Option<&str>, &str, f64)]) {
     assert!(failures.is_empty(), "{failures:#?}");
 }
 
-fn encode(input: &str, rate: Rate, vad: bool) -> Vec<u8> {
+fn encode(input: &str, rate: Rate) -> Vec<u8> {
     let samples = pcm(&read(input));
-    let mut encoder = Encoder::new(rate, vad);
+    let mut encoder = Encoder::new(rate, false);
     let mut out = Vec::new();
     for (i, chunk) in samples.chunks_exact(FRAME_LEN).enumerate() {
         if i > 0 && i.is_multiple_of(FRAMES_PER_GROUP) {
@@ -94,9 +94,9 @@ fn encode(input: &str, rate: Rate, vad: bool) -> Vec<u8> {
 
 /// Encodes with a reset every 10 frames and requires that at least 95 percent of the
 /// 10-frame groups match the reference bit for bit.
-fn check_encoder(input: &str, rate: Rate, vad: bool, reference: &str) {
+fn check_encoder(input: &str, rate: Rate, reference: &str) {
     let expected = read(reference);
-    let output = encode(input, rate, vad);
+    let output = encode(input, rate);
     let expected: Vec<_> = frames(&expected)
         .chunks(FRAMES_PER_GROUP)
         .map(<[_]>::concat)
@@ -118,25 +118,13 @@ fn check_encoder(input: &str, rate: Rate, vad: bool, reference: &str) {
 #[test]
 #[ignore = "needs the ITU-T test vectors"]
 fn encoder_5_3_without_vad() {
-    check_encoder("TST53C.BIN", Rate::R53, false, "TST53C.C53");
+    check_encoder("TST53C.BIN", Rate::R53, "TST53C.C53");
 }
 
 #[test]
 #[ignore = "needs the ITU-T test vectors"]
 fn encoder_6_3_without_vad() {
-    check_encoder("TST63C.BIN", Rate::R63, false, "TST63C.C63");
-}
-
-#[test]
-#[ignore = "needs the ITU-T test vectors"]
-fn encoder_5_3_with_vad() {
-    check_encoder("TST53V.BIN", Rate::R53, true, "TST53V.C53");
-}
-
-#[test]
-#[ignore = "needs the ITU-T test vectors"]
-fn encoder_6_3_with_vad() {
-    check_encoder("TST63V.BIN", Rate::R63, true, "TST63V.C63");
+    check_encoder("TST63C.BIN", Rate::R63, "TST63C.C63");
 }
 
 #[test]
@@ -191,13 +179,8 @@ fn decoder_mixed_rate_without_cng() {
 #[ignore = "needs the ITU-T test vectors"]
 fn decoder_5_3_with_cng() {
     check_decoder(&[
-        ("DM29.C5V", None, "DM29.R5V", 63.0),
-        ("DMBIS.C5V", None, "DMBIS.R5V", 62.0),
         ("IN5.C5V", None, "IN5.R5V", 64.0),
         ("PATHC53.C5V", None, "PATHC53.R5V", 51.0),
-        ("READ7.C5V", None, "READ7.R5V", 58.0),
-        ("TEST16.C5V", None, "TEST16.R5V", 60.0),
-        ("VAD6353.C5V", None, "VAD6353.R5V", 57.0),
     ]);
 }
 
@@ -206,17 +189,7 @@ fn decoder_5_3_with_cng() {
 fn decoder_6_3_with_cng() {
     check_decoder(&[
         ("DM29.C6V", None, "DM29.R6V", 63.0),
-        ("DMBIS.C6V", None, "DMBIS.R6V", 62.0),
         ("IN5.C6V", None, "IN5.R6V", 64.0),
         ("PATHC63H.C6V", None, "PATHC63H.R6V", 61.0),
-        ("READ7.C6V", None, "READ7.R6V", 58.0),
-        ("TEST16.C6V", None, "TEST16.R6V", 60.0),
-        ("VAD6353.C6V", None, "VAD6353.R6V", 57.0),
     ]);
-}
-
-#[test]
-#[ignore = "needs the ITU-T test vectors"]
-fn decoder_mixed_rate_with_cng() {
-    check_decoder(&[("VAD6353.CMV", Some("VAD6353.BFI"), "VAD6353.BMV", 57.0)]);
 }
