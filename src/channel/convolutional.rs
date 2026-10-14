@@ -148,7 +148,11 @@ mod tests {
             let bs = pseudo_random(len);
             let coded = encode(&bs, &a);
             assert_eq!(coded.len(), a.count(a.last()) - CONFIG_BITS);
-            assert_eq!(decode(&soft(&coded), &a, len), bs, "mode {mode} rate {rate}");
+            assert_eq!(
+                decode(&soft(&coded), &a, len),
+                bs,
+                "mode {mode} rate {rate}"
+            );
         }
     }
 

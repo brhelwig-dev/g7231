@@ -1,5 +1,19 @@
 //! ITU-T G.723.1 dual rate speech coder at 6.3 and 5.3 kbit/s, with the Annex A silence
 //! compression scheme and the Annex C channel coding scheme.
+//!
+//! The coder works on frames of 240 samples of 16-bit PCM at 8 kHz (30 ms).
+//!
+//! ```
+//! use g7231::{Decoder, Encoder, FRAME_LEN, Rate};
+//!
+//! let mut encoder = Encoder::new(Rate::R63, true);
+//! let mut decoder = Decoder::new(true);
+//! let pcm: [i16; FRAME_LEN] = std::array::from_fn(|n| (2000.0 * (n as f64 * 0.1).sin()) as i16);
+//! let frame = encoder.encode(&pcm);
+//! assert_eq!(frame.as_bytes().len(), 24);
+//! let speech = decoder.decode(frame.as_bytes(), false);
+//! assert_eq!(speech.len(), FRAME_LEN);
+//! ```
 
 #![forbid(unsafe_code)]
 #![allow(clippy::needless_range_loop)]

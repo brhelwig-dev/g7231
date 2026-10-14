@@ -5,7 +5,7 @@ use super::allocation::Allocation;
 use super::convolutional::{encode, exchange_trellis_end};
 use super::crc::parity;
 use super::{
-    AllowedRates, MODES, RateTooLow, UNTRANSMITTED_MARKER, config_bits, frame_octets, to_octets,
+    AllowedRates, EncodeError, MODES, UNTRANSMITTED_MARKER, config_bits, frame_octets, to_octets,
 };
 
 /// Highest channel bit rate each source mode can use.
@@ -44,8 +44,12 @@ impl ChannelEncoder {
     /// becomes the two octets [`UNTRANSMITTED_MARKER`] whatever the rate.
     ///
     /// [`UNTRANSMITTED_MARKER`]: super::UNTRANSMITTED_MARKER
-    pub fn encode(&mut self, frame: &[u8], requested: u16) -> Result<Vec<u8>, RateTooLow> {
-        let mode = usize::from(frame[0] & 3);
+    pub fn encode(&mut self, frame: &[u8], requested: u16) -> Result<Vec<u8>, EncodeError> {
+        let first = *frame.first().ok_or(EncodeError::ShortFrame)?;
+        if frame.len() < crate::frame_len(first) {
+            return Err(EncodeError::ShortFrame);
+        }
+        let mode = usize::from(first & 3);
         if mode == 3 {
             return Ok(UNTRANSMITTED_MARKER.to_vec());
         }
@@ -57,7 +61,7 @@ impl ChannelEncoder {
                 } else if requested >= low {
                     (0, low)
                 } else {
-                    return Err(RateTooLow);
+                    return Err(EncodeError::RateTooLow);
                 }
             }
             None => (0, requested.min(MAX_RATES[mode])),
@@ -66,7 +70,7 @@ impl ChannelEncoder {
         let allocation = match self.allocation {
             Some((previous, allocation)) if previous == index => allocation,
             _ => {
-                let allocation = Allocation::new(mode, rate)?;
+                let allocation = Allocation::new(mode, rate).ok_or(EncodeError::RateTooLow)?;
                 self.allocation = Some((index, allocation));
                 allocation
             }

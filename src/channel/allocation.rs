@@ -1,6 +1,6 @@
 //! Distribution of the channel bits over the five protection classes (C.2.5.1).
 
-use super::{CONFIG_BITS, CRC_BITS, MODES, RateTooLow, TAIL_BITS};
+use super::{CONFIG_BITS, CRC_BITS, MODES, TAIL_BITS};
 use crate::tables::{
     CLASS_RECIPROCALS_HIGH_RATE, CLASS_RECIPROCALS_LOW_RATE, CLASS_SIZES_HIGH_RATE,
     CLASS_SIZES_LOW_RATE, CLASS_SIZES_SID, CLASS_WEIGHTS_HIGH_RATE, CLASS_WEIGHTS_LOW_RATE,
@@ -52,7 +52,10 @@ impl Allocation {
 
     /// The last protected class: the largest of classes 1 to 4 with a code, or 0.
     pub(super) fn last(&self) -> usize {
-        (1..CLASSES).rev().find(|&i| self.rates[i] > UNPROTECTED).unwrap_or(0)
+        (1..CLASSES)
+            .rev()
+            .find(|&i| self.rates[i] > UNPROTECTED)
+            .unwrap_or(0)
     }
 
     /// Channel bits produced when classes 0 to `last` are coded, including the
@@ -71,13 +74,11 @@ impl Allocation {
     }
 
     /// Allocates the channel bits of a frame of source mode `mode` at channel bit rate
-    /// `rate`.
-    pub(super) fn new(mode: usize, rate: u16) -> Result<Self, RateTooLow> {
+    /// `rate`, or returns `None` when the rate is too low for the mode.
+    pub(super) fn new(mode: usize, rate: u16) -> Option<Self> {
         let budget = channel_bits(rate);
         let info_bits = MODES[mode].info_bits;
-        let Some(redundancy) = budget.checked_sub(info_bits + CRC_BITS + CONFIG_BITS) else {
-            return Err(RateTooLow);
-        };
+        let redundancy = budget.checked_sub(info_bits + CRC_BITS + CONFIG_BITS)?;
         let initial = initial_sizes(mode);
         let mut a = Allocation {
             sizes: initial,
@@ -89,14 +90,14 @@ impl Allocation {
             let tail_class = if mode < SID { 3 } else { 0 };
             a.sizes[tail_class] -= TAIL_BITS;
             a.unprotect_all();
-            return Ok(a);
+            return Some(a);
         }
         if redundancy >= limit {
             a.rates = [36, 36, 36, 36, UNPROTECTED];
             a.sizes[3] += a.sizes[4];
             a.sizes[4] = 0;
             a.adjust(mode, budget, false);
-            return Ok(a);
+            return Some(a);
         }
 
         let e4 = redundancy.saturating_sub(TAIL_BITS);
@@ -130,7 +131,7 @@ impl Allocation {
             }
         }
         a.adjust(mode, budget, true);
-        Ok(a)
+        Some(a)
     }
 
     fn unprotect_all(&mut self) {
@@ -256,9 +257,12 @@ mod tests {
         for (mode, low, high) in [(0, 7034, 20634), (1, 6000, 17534), (2, 1600, 4334)] {
             for rate in low..=high {
                 let a = Allocation::new(mode, rate).unwrap();
-                assert!(a.count(a.last()) <= channel_bits(rate), "mode {mode} rate {rate}");
+                assert!(
+                    a.count(a.last()) <= channel_bits(rate),
+                    "mode {mode} rate {rate}"
+                );
             }
         }
-        assert_eq!(Allocation::new(0, 7000), Err(RateTooLow));
+        assert_eq!(Allocation::new(0, 7000), None);
     }
 }

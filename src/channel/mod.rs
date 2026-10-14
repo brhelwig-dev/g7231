@@ -15,7 +15,9 @@ mod encoder;
 pub use decoder::{ChannelDecoder, Received};
 pub use encoder::ChannelEncoder;
 
-use crate::tables::{BIT_ORDER_HIGH_RATE, BIT_ORDER_LOW_RATE, BIT_ORDER_SID, CONFIG_BLOCK_CODEWORDS};
+use crate::tables::{
+    BIT_ORDER_HIGH_RATE, BIT_ORDER_LOW_RATE, BIT_ORDER_SID, CONFIG_BLOCK_CODEWORDS,
+};
 
 /// The two octets sent for an untransmitted frame.
 pub const UNTRANSMITTED_MARKER: [u8; 2] = [0xaf, 0x16];
@@ -29,17 +31,25 @@ const TAIL_BITS: usize = 4;
 /// frames, each with the rate of channel configuration 0 and of configuration 1.
 pub type AllowedRates = [[u16; 2]; 3];
 
-/// The requested channel bit rate is below the least the source mode needs.
+/// Why the channel encoder could not code a frame.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct RateTooLow;
+pub enum EncodeError {
+    /// The channel bit rate is below the least the source mode of the frame needs.
+    RateTooLow,
+    /// The frame is shorter than its frame type requires.
+    ShortFrame,
+}
 
-impl std::fmt::Display for RateTooLow {
+impl std::fmt::Display for EncodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str("channel bit rate too low for the source mode")
+        f.write_str(match self {
+            EncodeError::RateTooLow => "channel bit rate too low for the source mode",
+            EncodeError::ShortFrame => "frame shorter than its type requires",
+        })
     }
 }
 
-impl std::error::Error for RateTooLow {}
+impl std::error::Error for EncodeError {}
 
 /// Properties of a source mode: 0 high rate, 1 low rate, 2 SID frame.
 struct Mode {
@@ -120,6 +130,26 @@ fn frame_octets(rate: u16) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn short_frames_are_rejected() {
+        let mut encoder = ChannelEncoder::new([[7034, 20634], [6000, 17534], [1600, 4334]]);
+        assert_eq!(encoder.encode(&[], 8000), Err(EncodeError::ShortFrame));
+        assert_eq!(encoder.encode(&[0; 10], 8000), Err(EncodeError::ShortFrame));
+        assert_eq!(encoder.encode(&[0; 24], 7000), Err(EncodeError::RateTooLow));
+    }
+
+    #[test]
+    fn unusable_configured_rates_mark_frames_bad() {
+        let mut encoder = ChannelEncoder::test_mode();
+        let coded = encoder.encode(&[1; 20], 8000).unwrap();
+        let mut soft = [0i8; RECORD_LEN];
+        for (i, s) in soft.iter_mut().enumerate().take(8 * coded.len()) {
+            *s = if (coded[i / 8] >> (i % 8)) & 1 == 1 { -127 } else { 127 };
+        }
+        let received = ChannelDecoder::new([[100, 100]; 3]).decode(&soft);
+        assert!(received.bfi);
+    }
 
     #[test]
     fn octet_counts_follow_the_fixed_point_rule() {

@@ -25,7 +25,11 @@ fn uses_small_codebook(mode: usize, lag_index: u32) -> bool {
 }
 
 fn tail(mode: usize) -> (usize, usize) {
-    if mode == 0 { HIGH_RATE_TAIL } else { LOW_RATE_TAIL }
+    if mode == 0 {
+        HIGH_RATE_TAIL
+    } else {
+        LOW_RATE_TAIL
+    }
 }
 
 /// Bits of the frame whose bit ordering table applies: the channel adapted frame of an
@@ -38,7 +42,11 @@ fn adapt(frame: &[u8], mode: usize) -> Vec<u8> {
     let mut bits = Vec::with_capacity(8 * octets);
     push_field(&mut bits, mode as u32, 2);
     let lpc = field(frame, 2, 24);
-    let forward = [&LSP_REORDER_FORWARD_0, &LSP_REORDER_FORWARD_1, &LSP_REORDER_FORWARD_2];
+    let forward = [
+        &LSP_REORDER_FORWARD_0,
+        &LSP_REORDER_FORWARD_1,
+        &LSP_REORDER_FORWARD_2,
+    ];
     push_field(&mut bits, reorder(lpc, forward), 24);
     for (start, width) in [(26, 7), (33, 2), (35, 7), (42, 2)] {
         push_field(&mut bits, field(frame, start, width), width);
@@ -114,7 +122,11 @@ pub(super) fn restore(ordered: &[u8], mode: usize, last: &mut LastValid) -> (Vec
     let mut errors = 0;
     let mut bits = Vec::with_capacity(8 * 24);
     push_field(&mut bits, mode as u32, 2);
-    let inverse = [&LSP_REORDER_INVERSE_0, &LSP_REORDER_INVERSE_1, &LSP_REORDER_INVERSE_2];
+    let inverse = [
+        &LSP_REORDER_INVERSE_0,
+        &LSP_REORDER_INVERSE_1,
+        &LSP_REORDER_INVERSE_2,
+    ];
     push_field(&mut bits, reorder(field(&adapted, 2, 24), inverse), 24);
     let mut lags = [field(&adapted, 26, 7), field(&adapted, 35, 7)];
     let mut forbidden_lag = [false; 2];
@@ -134,7 +146,11 @@ pub(super) fn restore(ordered: &[u8], mode: usize, last: &mut LastValid) -> (Vec
     for i in 0..4 {
         let small = uses_small_codebook(mode, lags[i / 2]);
         let raw = field(&adapted, 44 + 8 * i, 8);
-        let (mut train, mut g) = if small { (raw >> 7, raw & 127) } else { (0, raw) };
+        let (mut train, mut g) = if small {
+            (raw >> 7, raw & 127)
+        } else {
+            (0, raw)
+        };
         let bound = if small { 85 } else { 170 };
         if g >= bound || forbidden_lag[i / 2] {
             (g, train) = (last.pitch_gain, last.train);
@@ -170,8 +186,16 @@ mod tests {
 
     #[test]
     fn reordering_tables_invert() {
-        let forward = [&LSP_REORDER_FORWARD_0, &LSP_REORDER_FORWARD_1, &LSP_REORDER_FORWARD_2];
-        let inverse = [&LSP_REORDER_INVERSE_0, &LSP_REORDER_INVERSE_1, &LSP_REORDER_INVERSE_2];
+        let forward = [
+            &LSP_REORDER_FORWARD_0,
+            &LSP_REORDER_FORWARD_1,
+            &LSP_REORDER_FORWARD_2,
+        ];
+        let inverse = [
+            &LSP_REORDER_INVERSE_0,
+            &LSP_REORDER_INVERSE_1,
+            &LSP_REORDER_INVERSE_2,
+        ];
         for lpc in [0, 0x123456, 0xffffff, 0xc884b1] {
             assert_eq!(reorder(reorder(lpc, forward), inverse), lpc);
         }

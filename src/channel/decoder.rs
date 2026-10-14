@@ -65,7 +65,11 @@ impl ChannelDecoder {
 
         let correlations: Vec<i64> = CONFIG_BLOCK_CODEWORDS
             .iter()
-            .map(|row| (0..CONFIG_BITS).map(|n| i64::from(soft[n]) * i64::from(row[n])).sum())
+            .map(|row| {
+                (0..CONFIG_BITS)
+                    .map(|n| i64::from(soft[n]) * i64::from(row[n]))
+                    .sum()
+            })
             .collect();
         let mut index = 0;
         for (m, &d) in correlations.iter().enumerate() {
@@ -79,38 +83,21 @@ impl ChannelDecoder {
             .max()
             .unwrap_or(i64::MIN);
         let confidence = ((correlations[index] - second) / 8).min(32767);
-        if index != self.accepted {
-            if confidence > MIN_CONFIDENCE && index % 4 != 3 {
-                self.accepted = index;
-            } else {
-                return match &self.previous {
-                    Some(previous) => Received {
-                        bfi: true,
-                        efi: true,
-                        fii: false,
-                        ..previous.clone()
-                    },
-                    None => Received {
-                        frame: vec![3],
-                        bfi: true,
-                        efi: true,
-                        fii: false,
-                    },
-                };
-            }
-        }
-
         let (mode, configuration) = (index % 4, index / 4);
+        if index != self.accepted && (confidence <= MIN_CONFIDENCE || mode == 3) {
+            return self.lost();
+        }
         let allocation = match self.allocation {
             Some((previous, allocation)) if previous == index => allocation,
-            _ => {
-                let rate = self.allowed[mode][configuration];
-                let allocation =
-                    Allocation::new(mode, rate).expect("configured rates suffice for each mode");
-                self.allocation = Some((index, allocation));
-                allocation
-            }
+            _ => match Allocation::new(mode, self.allowed[mode][configuration]) {
+                Some(allocation) => {
+                    self.allocation = Some((index, allocation));
+                    allocation
+                }
+                None => return self.lost(),
+            },
         };
+        self.accepted = index;
 
         let window = MODES[mode].crc_window;
         let mut bs = decode(soft, &allocation, MODES[mode].info_bits + CRC_BITS);
@@ -127,5 +114,17 @@ impl ChannelDecoder {
         };
         self.previous = Some(received.clone());
         received
+    }
+
+    /// The previous frame flagged as bad, for a frame whose configuration cannot be
+    /// accepted.
+    fn lost(&self) -> Received {
+        let frame = self.previous.as_ref().map_or(vec![3], |p| p.frame.clone());
+        Received {
+            frame,
+            bfi: true,
+            efi: true,
+            fii: false,
+        }
     }
 }

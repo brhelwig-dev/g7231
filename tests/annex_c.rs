@@ -55,7 +55,11 @@ fn encode(mut encoder: ChannelEncoder) -> Vec<u8> {
         .into_iter();
     let mut out = Vec::new();
     for frame in frames(&input) {
-        let rate = if frame[0] & 3 == 3 { 0 } else { rates.next().unwrap() };
+        let rate = if frame[0] & 3 == 3 {
+            0
+        } else {
+            rates.next().unwrap()
+        };
         out.extend(encoder.encode(frame, rate).unwrap());
     }
     out
@@ -72,13 +76,19 @@ fn check(encoder: ChannelEncoder, reference: &str) {
 #[test]
 #[ignore = "needs the ITU-T test vectors"]
 fn channel_encoder_bitrate0() {
-    check(ChannelEncoder::new(allowed_rates("BITRATE0.CFG")), "CHANBIT0.TX");
+    check(
+        ChannelEncoder::new(allowed_rates("BITRATE0.CFG")),
+        "CHANBIT0.TX",
+    );
 }
 
 #[test]
 #[ignore = "needs the ITU-T test vectors"]
 fn channel_encoder_bitrate1() {
-    check(ChannelEncoder::new(allowed_rates("BITRATE1.CFG")), "CHANBIT1.TX");
+    check(
+        ChannelEncoder::new(allowed_rates("BITRATE1.CFG")),
+        "CHANBIT1.TX",
+    );
 }
 
 #[test]
@@ -104,7 +114,11 @@ fn channel_decoder_round_trip() {
             let coded = encoder.encode(frame, rates.next().unwrap()).unwrap();
             let mut soft = [0i8; RECORD_LEN];
             for (i, s) in soft.iter_mut().enumerate().take(8 * coded.len()) {
-                *s = if (coded[i / 8] >> (i % 8)) & 1 == 1 { -127 } else { 127 };
+                *s = if (coded[i / 8] >> (i % 8)) & 1 == 1 {
+                    -127
+                } else {
+                    127
+                };
             }
             let received = decoder.decode(&soft);
             assert!(!received.bfi && !received.fii);
