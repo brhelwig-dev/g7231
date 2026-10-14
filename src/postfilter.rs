@@ -166,7 +166,13 @@ mod tests {
 
     fn periodic_buffer(period: usize) -> Vec<f64> {
         (0..EXC_MEMORY + FRAME_LEN)
-            .map(|i| if i.is_multiple_of(period) { 1000.0 } else { 10.0 })
+            .map(|i| {
+                if i.is_multiple_of(period) {
+                    1000.0
+                } else {
+                    10.0
+                }
+            })
             .collect()
     }
 

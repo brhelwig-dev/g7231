@@ -6,6 +6,7 @@
 
 mod acelp;
 mod bitstream;
+pub mod channel;
 mod cng;
 mod concealment;
 mod decoder;
