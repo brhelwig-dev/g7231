@@ -267,19 +267,15 @@ impl Encoder {
         silence.energies.copy_within(0..2, 1);
         let current = durbin(&silence.autocorrelation[0]);
         silence.energies[0] = current.energy;
-        let mut sid = silence.previous_active;
-        silence.energy_count = if sid {
+        silence.energy_count = if silence.previous_active {
             1
         } else {
             (silence.energy_count + 1).min(3)
         };
         let gain_index = cng::energy_gain_index(&silence.energies[..silence.energy_count]);
-        sid = sid
-            || cng::differs(
-                &silence.reference_function,
-                &silence.autocorrelation[0],
-                current.energy,
-            )
+        let spectrum = &silence.autocorrelation[0];
+        let sid = silence.previous_active
+            || cng::differs(&silence.reference_function, spectrum, current.energy)
             || gain_index.abs_diff(silence.reference_gain) > 3;
 
         let params = if sid {

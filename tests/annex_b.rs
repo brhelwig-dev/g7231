@@ -97,13 +97,22 @@ fn encode(input: &str, rate: Rate, vad: bool) -> Vec<u8> {
 fn check_encoder(input: &str, rate: Rate, vad: bool, reference: &str) {
     let expected = read(reference);
     let output = encode(input, rate, vad);
-    let expected: Vec<_> = frames(&expected).chunks(FRAMES_PER_GROUP).map(<[_]>::concat).collect();
-    let output: Vec<_> = frames(&output).chunks(FRAMES_PER_GROUP).map(<[_]>::concat).collect();
+    let expected: Vec<_> = frames(&expected)
+        .chunks(FRAMES_PER_GROUP)
+        .map(<[_]>::concat)
+        .collect();
+    let output: Vec<_> = frames(&output)
+        .chunks(FRAMES_PER_GROUP)
+        .map(<[_]>::concat)
+        .collect();
     assert_eq!(expected.len(), output.len(), "number of frame groups");
     let matching = expected.iter().zip(&output).filter(|(e, o)| e == o).count();
     let percent = 100.0 * matching as f64 / expected.len() as f64;
     println!("{input}: {percent:.1} % of {} groups match", expected.len());
-    assert!(percent >= 95.0, "{input}: only {percent:.1} % of the groups match");
+    assert!(
+        percent >= 95.0,
+        "{input}: only {percent:.1} % of the groups match"
+    );
 }
 
 #[test]

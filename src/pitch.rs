@@ -3,8 +3,7 @@
 
 use crate::bitstream::GainCode;
 use crate::tables::{
-    PITCH_GAIN_CODEBOOK_85, PITCH_GAIN_CODEBOOK_170, TAMING_GAIN_BOUNDS_85,
-    TAMING_GAIN_BOUNDS_170,
+    PITCH_GAIN_CODEBOOK_85, PITCH_GAIN_CODEBOOK_170, TAMING_GAIN_BOUNDS_85, TAMING_GAIN_BOUNDS_170,
 };
 use crate::{Rate, SUBFRAME_LEN, dot};
 
@@ -300,7 +299,16 @@ mod tests {
         let mut h = [0.0; SUBFRAME_LEN];
         h[0] = 1.0;
         let target: [f64; SUBFRAME_LEN] = std::array::from_fn(|n| 0.6 * past[145 - 90 + n]);
-        let choice = search(&target, &h, &past, 0, 90, Rate::R53, &Taming::default(), false);
+        let choice = search(
+            &target,
+            &h,
+            &past,
+            0,
+            90,
+            Rate::R53,
+            &Taming::default(),
+            false,
+        );
         assert_eq!(choice.lag(), 90);
         let row = &PITCH_GAIN_CODEBOOK_170[choice.gain_index];
         let u = adaptive_vector(&past, 90, row);

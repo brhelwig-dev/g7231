@@ -206,7 +206,10 @@ mod tests {
         let pf = PitchPostfilter::search(&buf, 120, 50, Rate::R53);
         let mut out = [0.0; SUBFRAME_LEN];
         pf.apply(&buf, 120, &mut out);
-        let before: f64 = buf[EXC_MEMORY + 120..EXC_MEMORY + 180].iter().map(|x| x * x).sum();
+        let before: f64 = buf[EXC_MEMORY + 120..EXC_MEMORY + 180]
+            .iter()
+            .map(|x| x * x)
+            .sum();
         let after: f64 = out.iter().map(|x| x * x).sum();
         assert!((before - after).abs() < 1e-6 * before);
     }

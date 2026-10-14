@@ -3,11 +3,11 @@
 //!
 //! LSP frequencies are in units of pi/256 radian (15.625 Hz).
 
-use crate::{LPC_ORDER, dot};
 use crate::tables::{
     BANDWIDTH_EXPANSION_FACTORS, LSP_BAND0_CODEBOOK, LSP_BAND1_CODEBOOK, LSP_BAND2_CODEBOOK,
     LSP_COSINE_TABLE, LSP_DC_VECTOR, LSP_INTERPOLATION_WEIGHTS, LSP_POLYNOMIAL_SCALES,
 };
+use crate::{LPC_ORDER, dot};
 
 pub(crate) type Lsp = [f64; LPC_ORDER];
 pub(crate) type Lpc = [f64; LPC_ORDER];
@@ -78,11 +78,7 @@ pub(crate) fn quantize(lsp: &Lsp, previous: &Lsp) -> [u8; 3] {
     ]
 }
 
-fn search_band<const N: usize>(
-    codebook: &[[f64; N]; 256],
-    target: &[f64],
-    weight: &[f64],
-) -> u8 {
+fn search_band<const N: usize>(codebook: &[[f64; N]; 256], target: &[f64], weight: &[f64]) -> u8 {
     let mut best = -1.0;
     let mut best_index = 0;
     for (l, entry) in codebook.iter().enumerate() {
@@ -181,7 +177,6 @@ fn polynomial(x1: f64, x3: f64, rest: [f64; 3]) -> [f64; 6] {
 #[cfg(test)]
 mod tests {
     use super::*;
-
 
     #[test]
     fn lsp_to_lpc_and_back() {

@@ -152,7 +152,11 @@ impl Decoder {
         } else {
             0.875 * self.noise_gain + 0.125 * self.sid_gain
         };
-        let noise = cng::excitation(self.noise_gain, &mut self.excitation, &mut self.noise_random);
+        let noise = cng::excitation(
+            self.noise_gain,
+            &mut self.excitation,
+            &mut self.noise_random,
+        );
         let lpc = lsp::interpolate(&self.previous_lsp, &self.sid_lsp);
         self.previous_lsp = self.sid_lsp;
         (noise.excitation, lpc)

@@ -259,7 +259,10 @@ mod tests {
 
     /// An entry of the pitch gain codebook that adds no pitch-synchronous filter.
     fn plain_gain_index() -> usize {
-        ACELP_PITCH_TAP_OFFSETS.iter().position(|&o| o == 60).unwrap()
+        ACELP_PITCH_TAP_OFFSETS
+            .iter()
+            .position(|&o| o == 60)
+            .unwrap()
     }
 
     #[test]
@@ -285,10 +288,19 @@ mod tests {
     fn pitch_synchronous_codes_round_trip() {
         let h = impulse_response();
         let r: [f64; SUBFRAME_LEN] = std::array::from_fn(|n| 800.0 * (n as f64 * 0.7).sin());
-        let gain = (0..170).find(|&i| ACELP_PITCH_TAP_OFFSETS[i] != 60).unwrap();
+        let gain = (0..170)
+            .find(|&i| ACELP_PITCH_TAP_OFFSETS[i] != 60)
+            .unwrap();
         let mut carry = SEARCH_BUDGET;
         let code = search(&r, &h, 30, gain, &mut carry);
-        let decoded = decode(code.position, code.signs, code.gain_index, code.grid, 30, gain);
+        let decoded = decode(
+            code.position,
+            code.signs,
+            code.gain_index,
+            code.grid,
+            30,
+            gain,
+        );
         assert_eq!(decoded, code.vector);
     }
 

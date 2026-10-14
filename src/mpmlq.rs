@@ -286,7 +286,10 @@ mod tests {
     #[test]
     fn decoded_pulse_trains_repeat_the_pulses() {
         let plain = decode(1234, 0b10110, 7, 1, false, 3, 21);
-        assert_eq!(decode(1234, 0b10110, 7, 1, true, 3, 21), pulse_train(&plain, 21));
+        assert_eq!(
+            decode(1234, 0b10110, 7, 1, true, 3, 21),
+            pulse_train(&plain, 21)
+        );
     }
 
     #[test]
@@ -295,7 +298,9 @@ mod tests {
         let r: [f64; SUBFRAME_LEN] = std::array::from_fn(|n| 2000.0 * (n as f64 * 0.31).cos());
         let code = search(&r, &h, 0, 120);
         let synthesized = convolve(&code.vector, &h);
-        let error: f64 = (0..SUBFRAME_LEN).map(|n| (r[n] - synthesized[n]).powi(2)).sum();
+        let error: f64 = (0..SUBFRAME_LEN)
+            .map(|n| (r[n] - synthesized[n]).powi(2))
+            .sum();
         assert!(error < dot(&r, &r));
     }
 

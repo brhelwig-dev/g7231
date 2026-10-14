@@ -211,7 +211,10 @@ mod tests {
 
     #[test]
     fn gain_levels_join_without_gaps() {
-        assert_eq!([0, 15, 16, 31, 32, 63].map(decode_gain), [0.0, 30.0, 32.0, 92.0, 96.0, 344.0]);
+        assert_eq!(
+            [0, 15, 16, 31, 32, 63].map(decode_gain),
+            [0.0, 30.0, 32.0, 92.0, 96.0, 344.0]
+        );
     }
 
     #[test]
@@ -230,9 +233,15 @@ mod tests {
         let mut memory = [0.0; EXC_MEMORY];
         let mut random = Random::new(SEED);
         let noise = excitation(100.0, &mut memory, &mut random);
-        let energy = dot(&noise.excitation[..BLOCK_LEN], &noise.excitation[..BLOCK_LEN]);
+        let energy = dot(
+            &noise.excitation[..BLOCK_LEN],
+            &noise.excitation[..BLOCK_LEN],
+        );
         assert!((energy - 120.0 * 100.0 * 100.0).abs() < 1e-6 * energy);
-        assert_eq!(&memory[EXC_MEMORY - BLOCK_LEN..], &noise.excitation[BLOCK_LEN..]);
+        assert_eq!(
+            &memory[EXC_MEMORY - BLOCK_LEN..],
+            &noise.excitation[BLOCK_LEN..]
+        );
     }
 
     #[test]

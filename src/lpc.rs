@@ -142,7 +142,10 @@ mod tests {
             r[j] = a1 * r[j - 1] + a2 * r[j - 2];
         }
         let p = durbin(&r);
-        assert!((p.lpc[0] - a1).abs() < 1e-9 && (p.lpc[1] - a2).abs() < 1e-9, "{p:?}");
+        assert!(
+            (p.lpc[0] - a1).abs() < 1e-9 && (p.lpc[1] - a2).abs() < 1e-9,
+            "{p:?}"
+        );
         assert!((p.pk2 - 0.5).abs() < 1e-9);
     }
 
