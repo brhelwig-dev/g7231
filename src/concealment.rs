@@ -60,10 +60,10 @@ pub(crate) fn regenerate(
         for n in 0..FRAME_LEN {
             buf[EXC_MEMORY + n] = buf[EXC_MEMORY - lag + n % lag];
         }
-        for n in 0..FRAME_LEN {
-            buf[EXC_MEMORY + n] *= 0.75;
-            out[n] = buf[EXC_MEMORY + n];
+        for x in &mut buf[EXC_MEMORY..] {
+            *x *= 0.75;
         }
+        out.copy_from_slice(&buf[EXC_MEMORY..]);
     } else {
         for x in &mut out {
             *x = gain * f64::from(random.next()) / 32768.0;
