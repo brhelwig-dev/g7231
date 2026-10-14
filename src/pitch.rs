@@ -70,7 +70,7 @@ pub(crate) fn search(
     taming: &Taming,
     sine_detected: bool,
 ) -> PitchChoice {
-    let even = k % 2 == 0;
+    let even = k.is_multiple_of(2);
     let (base, candidates) = if even {
         (lag_base.clamp(19, 140), 3)
     } else {

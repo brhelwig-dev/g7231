@@ -83,7 +83,7 @@ fn encode(input: &str, rate: Rate, vad: bool) -> Vec<u8> {
     let mut encoder = Encoder::new(rate, vad);
     let mut out = Vec::new();
     for (i, chunk) in samples.chunks_exact(FRAME_LEN).enumerate() {
-        if i > 0 && i % FRAMES_PER_GROUP == 0 {
+        if i > 0 && i.is_multiple_of(FRAMES_PER_GROUP) {
             encoder.reset();
         }
         let frame: &[i16; FRAME_LEN] = chunk.try_into().unwrap();

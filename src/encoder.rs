@@ -202,7 +202,7 @@ impl Encoder {
             let mut target = targets[k];
             self.memory.subtract_ringing(&filter, &mut target);
 
-            let lag_base = if k % 2 == 0 {
+            let lag_base = if k.is_multiple_of(2) {
                 open_loop[k / 2]
             } else {
                 frame.lags[k / 2]
@@ -217,7 +217,7 @@ impl Encoder {
                 &self.taming,
                 self.sine.detected(),
             );
-            if k % 2 == 0 {
+            if k.is_multiple_of(2) {
                 frame.lags[k / 2] = choice.pair_lag;
             } else {
                 frame.lag_offsets[k / 2] = choice.offset as u8;

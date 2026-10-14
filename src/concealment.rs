@@ -57,8 +57,8 @@ pub(crate) fn regenerate(
     if erased >= MAX_ERASED {
         *buf = [0.0; BUFFER_LEN];
     } else if lag != 0 {
-        for n in EXC_MEMORY..BUFFER_LEN {
-            buf[n] = buf[n - lag];
+        for n in 0..FRAME_LEN {
+            buf[EXC_MEMORY + n] = buf[EXC_MEMORY - lag + n % lag];
         }
         for n in 0..FRAME_LEN {
             buf[EXC_MEMORY + n] *= 0.75;
@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn periodic_frames_are_voiced() {
         let buf: [f64; BUFFER_LEN] =
-            std::array::from_fn(|i| if i % 50 == 0 { 1000.0 } else { -20.0 });
+            std::array::from_fn(|i| if i.is_multiple_of(50) { 1000.0 } else { -20.0 });
         assert_eq!(classify(&buf, 51).0, 50);
     }
 
