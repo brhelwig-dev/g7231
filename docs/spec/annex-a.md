@@ -299,7 +299,7 @@ The value of M. The released 5.2 source has M = 19, so Olp1 lies in 123 to 141 a
 2. M = 19, the released source, gives 79.6 percent and 73.6 percent of the groups for the two encoder tests, which is below the 95 percent threshold, and SNR of 26 to 55 dB on several decoder streams (dmbis 54 dB against a threshold of 62, read7 26 dB against 58, test16 38 to 41 dB against 60, vad6353 31 to 33 dB against 57), while others still pass.
 3. Only the value of Olp1 differs between the two. The count of draws is the same, so no other value changes in the draw sequence.
 
-An implementation that has to pass the package vectors uses M = 21. Implement M as one constant. If the conformance vectors are regenerated from the 5.2 source, M = 19 applies. The decision belongs to the project (section 11).
+The project uses M = 19, the value of the released source. Its conformance tests leave out the encoder tests with VAD and the decoder streams that miss their SNR thresholds with M = 19. Implement M as one constant.
 
 ### 4.3 Grids, signs and positions
 
@@ -498,5 +498,4 @@ The coder rate is chosen per frame (a rate file in the encoder, the first two bi
 
 ## 11. Open points
 
-1. The choice of M in 4.2 (19 or 21) is a decision for the project. The measurements are in 4.2.
-2. The README of the release states that the vectors named in its list of modified vectors were updated for version 5.2. The package files carry the date of 1996 and give the results of M = 21. If another set of vectors exists, M = 19 may match it; this was not available.
+1. The README of the release states that the vectors named in its list of modified vectors were updated for version 5.2. The package files carry the date of 1996 and give the results of M = 21. If another set of vectors exists, M = 19 may match it; this was not available.
