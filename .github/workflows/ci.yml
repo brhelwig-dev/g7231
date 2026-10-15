@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  ITU_PACKAGE_URL: "https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-G.723.1-200605-I!!SOFT-ZST-E&type=items"
+  ITU_PACKAGE_SHA256: 14efc1f473a7568151e935d91cec2db1d1e3afcb6e0cc5040b7778fe37d06ab7
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install
+      - uses: actions/cache@v4
+        with:
+          path: itu/g7231.zip
+          key: itu-g7231-${{ env.ITU_PACKAGE_SHA256 }}
+      - name: Fetch the ITU-T G.723.1 test vectors
+        run: |
+          mkdir -p itu
+          if [ ! -f itu/g7231.zip ]; then
+            curl -fsSL --retry 4 -o itu/g7231.zip "$ITU_PACKAGE_URL"
+          fi
+          echo "$ITU_PACKAGE_SHA256  itu/g7231.zip" | sha256sum -c -
+          unzip -q -o itu/g7231.zip 'Software/*' -x '*.C' '*.H' '*.c' '*.h' '*.MAK' -d itu
+      - run: cargo test --release -- --ignored --nocapture
+        env:
+          G7231_VECTORS: ${{ github.workspace }}/itu/Software

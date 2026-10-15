@@ -1,0 +1,13 @@
+[package]
+name = "g7231"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "MIT OR Apache-2.0"
+description = "ITU-T G.723.1 dual rate speech coder with Annex A silence compression and Annex C channel coding"
+repository = "https://github.com/brhelwig-dev/g7231"
+keywords = ["codec", "speech", "g723", "audio", "voip"]
+categories = ["multimedia::audio", "compression"]
+exclude = ["tools/"]
+
+[dependencies]
